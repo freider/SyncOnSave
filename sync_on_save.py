@@ -1,15 +1,29 @@
-import sublime
+# Copyright 2013 Elias Freider
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import print_function  # for Python 2.6/SublimeText 2 compatibility
 import sublime_plugin
+import sublime
 
 import subprocess
 import os
 import sys
 
-
 # TODO: make the following globals into settings
 TRIGGER_FILES = [
     '.nicesetup',  # for backwards compatibility with my old NiceSetup plugin
-    '.syncsettings' 
+    '.syncsettings'
 ]
 EXCLUDE_PATTERNS = [
     '*~',
@@ -26,7 +40,7 @@ class SyncOnSave(sublime_plugin.EventListener):
     Uses rsync to sync to a remote machine. To specify what to sync where, put a
     .syncsettings trigger file in the directory you want to sync.
     It must be the directory or some parent directory of your current working file.
-    Upon saving any file within the directory with the trigger file, 
+    Upon saving any file within the directory with the trigger file,
     the directory containing the trigger file will be synced to all
     destinations listed in the trigger file as per rsync syntax e.g.
 
@@ -34,7 +48,7 @@ class SyncOnSave(sublime_plugin.EventListener):
     192.168.0.12:/var/www
     /local/dir
     """
-    def on_post_save_async(self, view):
+    def sync_working_dir(self, view):
         test_dir = view.file_name()
         trigger_file = None
         while test_dir != '/':
@@ -48,12 +62,12 @@ class SyncOnSave(sublime_plugin.EventListener):
         if not trigger_file:
             debug("No trigger file found in any parent directory")
             return
-        debug("Found {}".format(trigger_file))
+        debug("Found {0}".format(trigger_file))
         local_dir = os.path.dirname(trigger_file)
         with open(trigger_file) as f:
             for line in f:
                 remote_location = line.strip()
-                view.set_status("SyncOnSave", "Uploading to {}".format(remote_location))
+                view.set_status("SyncOnSave", "Uploading to {0}".format(remote_location))
                 cmd = ['rsync', '-av', '--delete']
                 for pattern in EXCLUDE_PATTERNS:
                     cmd += ['--exclude', pattern]
@@ -68,5 +82,15 @@ class SyncOnSave(sublime_plugin.EventListener):
         # TODO: multiple destination status
         view.set_status("SyncOnSave", "Successfully synced")
 
+    def on_post_save(self, view):
+        # SublimeText 2.0 fallback
+        if int(sublime.version()) < 3000:
+            self.sync_working_dir(view)
+
+    def on_post_save_async(self, view):
+        # async is preferable
+        if int(sublime.version()) >= 3000:
+            self.sync_working_dir(view)
+
     def on_modified(self, view):
-        view.set_status("SyncOnSave", "") # clear sync status in status bar
+        view.set_status("SyncOnSave", "")  # clear sync status in status bar
