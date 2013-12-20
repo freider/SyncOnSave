@@ -1,0 +1,4 @@
+{
+	"trigger-files": [".sync"],
+	"exclude-patterns": ["*~", ".DS_Store"]
+}

@@ -22,8 +22,7 @@ import sys
 
 # TODO: make the following globals into settings
 TRIGGER_FILES = [
-    '.nicesetup',  # for backwards compatibility with my old NiceSetup plugin
-    '.syncsettings'
+    '.sync',
 ]
 EXCLUDE_PATTERNS = [
     '*~',
@@ -39,7 +38,7 @@ class SyncOnSave(sublime_plugin.EventListener):
     """Sync changes to remote machine/directory on save
 
     Uses rsync to sync to a remote machine. To specify what to sync where,
-    put a ".syncsettings" trigger file in the directory you want to sync.
+    put a ".sync" trigger file in the directory you want to sync.
     It must be the directory or some parent directory of your current
     working file. Upon saving any file within the directory with the
     trigger file, the directory containing the trigger file will be
