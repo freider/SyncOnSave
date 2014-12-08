@@ -12,26 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function  # for Python 2.x/SublimeText 2
+
 import sublime_plugin
 import sublime
-
-import subprocess
 import os
-import sys
-
-# TODO: make the following globals into settings
-TRIGGER_FILES = [
-    '.sync',
-]
-EXCLUDE_PATTERNS = [
-    '*~',
-    '.DS_Store',
-] + TRIGGER_FILES
-
-
-def debug(message):
-    print("SyncOnSave:", message, file=sys.stderr)
+from syncutil import (
+    get_trigger_file_path,
+    debug,
+    sync_dir,
+    parse_trigger_file
+)
 
 
 class SyncOnSave(sublime_plugin.EventListener):
@@ -51,43 +41,21 @@ class SyncOnSave(sublime_plugin.EventListener):
 
     """
     def sync_working_dir(self, view):
-        test_dir = view.file_name()
-        trigger_file = None
-        while test_dir != '/':
-            for test_trigger in TRIGGER_FILES:
-                test_file = os.path.join(test_dir, test_trigger)
-                debug("Testing " + test_file)
-                if os.path.exists(test_file):
-                    trigger_file = test_file
-                    break
-            test_dir = os.path.dirname(test_dir)
-        if not trigger_file:
+        cur_file = view.file_name()
+        trigger_file_path = get_trigger_file_path(cur_file)
+        if not trigger_file_path:
             debug("No trigger file found in any parent directory")
             return
-        debug("Found {0}".format(trigger_file))
-        local_dir = os.path.dirname(trigger_file)
-        with open(trigger_file) as f:
-            for line in f:
-                remote_location = line.strip()
-                if not remote_location:
-                    continue
+        debug("Found {0}".format(trigger_file_path))
+        local_dir = os.path.dirname(trigger_file_path)
+
+        with open(trigger_file_path) as f:
+            for remote_location in parse_trigger_file(f):
                 view.set_status(
                     "SyncOnSave",
                     "Uploading to {0}".format(remote_location)
                 )
-                cmd = ['rsync', '-av', '--delete']
-                for pattern in EXCLUDE_PATTERNS:
-                    cmd += ['--exclude', pattern]
-                cmd += [local_dir, remote_location]
-                print(cmd)
-                p = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT
-                )
-                for line in p.stdout:
-                    debug(line.decode('utf8').rstrip('\n'))
-                status = p.wait()
+                status = sync_dir(local_dir, remote_location)
             if status:
                 view.set_status("SyncOnSave", "Error on sync")
         # TODO: multiple destination status
