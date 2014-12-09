@@ -16,7 +16,7 @@
 import sublime_plugin
 import sublime
 import os
-from syncutil import (
+from .lib.syncutil import (
     get_trigger_file_path,
     debug,
     sync_dir,
@@ -48,6 +48,8 @@ class SyncOnSave(sublime_plugin.EventListener):
             return
         debug("Found {0}".format(trigger_file_path))
         local_dir = os.path.dirname(trigger_file_path)
+        success = []
+        failure = []
 
         with open(trigger_file_path) as f:
             for remote_location in parse_trigger_file(f):
@@ -56,10 +58,16 @@ class SyncOnSave(sublime_plugin.EventListener):
                     "Uploading to {0}".format(remote_location)
                 )
                 status = sync_dir(local_dir, remote_location)
-            if status:
-                view.set_status("SyncOnSave", "Error on sync")
-        # TODO: multiple destination status
-        view.set_status("SyncOnSave", "Successfully synced")
+                if status:
+                    view.set_status("SyncOnSave", "Error on sync")
+                    failure.append(remote_location)
+                else:
+                    success.append(remote_location)
+
+        view.set_status(
+            "SyncOnSave",
+            "Successfully synced to {}".format(', '.join(success))
+        )
 
     def on_post_save(self, view):
         # SublimeText 2.0 fallback
