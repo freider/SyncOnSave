@@ -61,6 +61,9 @@ def parse_trigger_file(tfile):
 def trigger_from_dir(dirpath):
     current_dir = dirpath
     trigger_file_path = get_trigger_file_path(dirpath)
+    if trigger_file_path is None:
+        debug("No trigger file matching names in {}".format(TRIGGER_FILES))
+        return
     debug("Using {0}".format(trigger_file_path))
 
     with open(trigger_file_path) as f:
