@@ -19,6 +19,6 @@ The syncpush command line utility is included to allow syncing from the terminal
 Add a symlink to the executable using the following example snippet. This assumes you have a bin directory in your home directory which is on your PATH:
 
 ```
-ln -s "~/Library/Application\ Support/Sublime\ Text\ 3/Packages/SyncOnSave/bin/syncpush" ~/bin/syncpush
+ln -s ~/Library/Application\ Support/Sublime\ Text\ 3/Packages/SyncOnSave/bin/syncpush ~/bin/syncpush
 chmod +x ~/bin/syncpush
 ```
