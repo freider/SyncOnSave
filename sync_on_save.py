@@ -16,7 +16,7 @@
 import sublime_plugin
 import sublime
 import os
-from .lib.syncutil import (
+from .synconsave_lib.syncutil import (
     get_trigger_file_path,
     debug,
     sync_dir,

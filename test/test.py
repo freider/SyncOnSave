@@ -1,6 +1,6 @@
 from unittest import TestCase
 import mock
-from lib import syncutil
+from synconsave_lib import syncutil
 import subprocess
 from StringIO import StringIO
 
